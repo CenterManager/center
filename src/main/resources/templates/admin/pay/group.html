@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>后台管理</title>
+    <link rel="stylesheet" type="text/css" href="/admin/static/css/admin.css"/>
+    <link rel="stylesheet" type="text/css" href="/admin/static/element/index.css"/>
+    <script src="/admin/static/element/vue.js"></script>
+    <script src="/admin/static/element/index.js"></script>
+    <script src="/admin/static/js/jquery-3.4.1.min.js"></script>
+    <script src="/admin/main.js"></script>
+    <script src="/admin/static/js/common.js"></script>
+
+</head>
+<body>
+<script>
+    Vue.config.devtools = false;
+    Vue.config.productionTip = false;
+    var AppFrame = function(){
+        this.prototype = new Vue();
+        return this;
+    }
+
+    var AppFrame = function(data){
+
+        data.el = '#app';
+        data.methods.msgError = function(msg){
+            return this.$message.error(msg);
+        }
+        data.methods.msgSuccess = function(msg){
+            return this.$message.success(msg);
+        }
+        var vm = new Vue(data);
+
+        return {
+            get : function(){
+                return vm;
+            }
+        }
+    }
+
+    $(document).ready(function(){
+        $('#app').show();
+    });
+</script>
+<style>
+    #app{
+        display: none;
+    }
+</style>
+<div id="app" >
+    <el-row style='height: 93%;overflow: auto;'>
+        <!--工具条-->
+        <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
+            <el-form :inline="true">
+
+                <el-form-item>
+                    <el-select v-model="appId" placeholder="专服" style="width: 120px">
+                        <el-option
+                                v-for="item in appIds"
+                                :label="item.label"
+                                :value="item.value">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item>
+                    <el-select v-model="femaleBag" placeholder="混专服" style="width: 120px">
+                        <el-option
+                                v-for="item in femaleBags"
+                                :label="item.label"
+                                :value="item.value">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item>
+                    <div class="block">
+                        <el-date-picker
+                                v-model="intervalTimer"
+                                type="daterange"
+                                align="right"
+                                unlink-panels
+                                range-separator="至"
+                                start-placeholder="开始日期"
+                                end-placeholder="结束日期"
+                                :picker-options="pickerOptions"
+                                value-format="yyyy-MM-dd"
+                        >
+                        </el-date-picker>
+                    </div>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary"  v-on:click="getSearchGroup">查询</el-button>
+                </el-form-item>
+                <el-form-item style="float: right;margin-right:200px;font-size: 14px;color:#606266;">
+                    总金额:{{allPayMoney}}元
+                </el-form-item>
+                <!--             <el-form-item>
+                                <el-button type="" @click="addAdmin" icon="plus">新增</el-button>
+                            </el-form-item> -->
+            </el-form>
+        </el-col>
+        <!--列表-->
+        <el-table :data="payList" highlight-current-row v-loading="listLoading"  style="width: 100%;" :max-height=tableHeight>
+            <el-table-column type="index" label="序号" style="width: 20%">
+            </el-table-column>
+            <el-table-column prop="notify" label="日期" style="width: 40%">
+            </el-table-column>
+            <el-table-column prop="sumMoney" label="金额" style="width: 40%">
+            </el-table-column>
+            <el-table-column label="操作" width="140" fixed="right">
+                <template scope="scope">
+                    <el-button type="text" size="small" @click="editAdmin(scope.row.adminId)">编辑</el-button>  <el-button type="text" size="small" @click="removeAdmin(scope.row.adminId)">删除</el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+
+    </el-row>
+    <!--工具条-->
+    <el-col :span="24" class="toolbar text-right">
+        <el-pagination
+                background
+                @current-change="handleCurrentChange"
+                @size-change="handleSizeChange"
+                :current-page="currentPage"
+                :page-sizes="[10, 20, 50, 100]"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="total">
+        </el-pagination>
+    </el-col>
+</div>
+<style>
+    .el-header {
+        background-color: #B3C0D1;
+        color: #333;
+        line-height: 60px;
+    }
+
+    .el-aside {
+        color: #333;
+    }
+</style>
+<script>
+    var frame = AppFrame({
+        el: '#app',
+        data: function() {
+
+            return {
+                allPayMoney:0,
+                total:0,
+                page:1,
+                pageSize:10,
+                payList:[],
+                appId:'',
+                femaleBag:'',
+                appIds: [],
+                femaleBags: [{
+                    value: null,
+                    label: ''
+                },{
+                    value: 1,
+                    label: '欢乐多'
+                }, {
+                    value: 2,
+                    label: '天庭'
+                }, {
+                    value: 3,
+                    label: '赤霞仙林'
+                }, {
+                    value: 5,
+                    label: '羋动'
+                }],
+                pickerOptions: {
+                    shortcuts: [{
+                        text: '最近一周',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }, {
+                        text: '最近一个月',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }, {
+                        text: '最近三个月',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }]
+                },
+                intervalTimer: ''
+            }
+        },
+        methods:{
+
+            handleCurrentChange:function(val) {
+                // var department = this.department;
+                // this.page = val;
+                // var pageSize = this.pageSize;
+                // var keytype = this.keytype;
+                // var keyword = this.keyword;
+                // this.getAdminList(department,this.page,pageSize,keytype,keyword);
+                this.page = val;
+                var pageSize = this.pageSize;
+                this.getPayGroup(this.page,this.pageSize,this.appId,this.femaleBag,Util.toString(this.intervalTimer));
+            },
+
+            handleSizeChange:function(val) {
+                // var department = this.department;
+                // this.currentPage = 1;
+                // this.pageSize = val;
+                // var keytype = this.keytype;
+                // var keyword = this.keyword;
+                // this.getAdminList(department,this.currentPage,this.pageSize,keytype,keyword);
+                this.page = 1;
+                this.pageSize = val;
+                this.getPayGroup(this.page,this.pageSize,this.appId,this.femaleBag,Util.toString(this.intervalTimer));
+            },
+
+            getPayGroup:function(page,pageSize,appId,femaleBag,intervalTimer) {
+                var self = this;
+                AjaxLoader.post(AppCommon.getUrl('/admin/pay/getPayGroup'),{'page':page,'pageSize':pageSize,'appId':appId,'femaleBag':femaleBag,'intervalTimer':intervalTimer},function(data){
+                    console.log(data);
+                    self.payList = data.data;
+                    self.total = data.count;
+                });
+
+            },
+
+            getGroup:function(){
+
+                var page = this.page;
+                var pageSize = this.pageSize;
+                var appId = this.appId;
+                var femaleBag = this.femaleBag;
+                this.getPayGroup(page,pageSize,appId,femaleBag,Util.toString(this.intervalTimer));
+
+            },
+
+            getSearchGroup:function(){
+                Util.toString(this.intervalTimer);
+                this.getPayGroup(1,this.pageSize,this.appId,this.femaleBag,Util.toString(this.intervalTimer));
+            },
+
+            getAllApp:function(){
+                var self = this;
+
+                AjaxLoader.get(AppCommon.getUrl('/admin/app/getAllApp'),function(data){
+                    self.appIds = data;
+                });
+            },
+
+            getAllPayMoney:function(){
+                var self = this;
+
+                AjaxLoader.get(AppCommon.getUrl('/admin/pay/getAllPayMoney'),function(data){
+                    self.allPayMoney = data;
+                });
+            },
+        },
+        beforeMount:function() {
+
+        },
+        //用于数据初始化
+        mounted:function(){
+            this.getAllApp();
+            this.getAllPayMoney();
+            this.getPayGroup(this.page,this.pageSize,this.appId,this.femaleBag,Util.toString(this.intervalTimer));
+        }
+
+    })
+</script>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>后台管理</title>
+    <link rel="stylesheet" type="text/css" href="/admin/static/css/admin.css"/>
+    <link rel="stylesheet" type="text/css" href="/admin/static/element/index.css"/>
+    <script src="/admin/static/element/vue.js"></script>
+    <script src="/admin/static/element/index.js"></script>
+    <script src="/admin/static/js/jquery-3.4.1.min.js"></script>
+    <script src="/admin/main.js"></script>
+    <script src="/admin/static/js/common.js"></script>
+
+</head>
+<body>
+<script>
+    Vue.config.devtools = false;
+    Vue.config.productionTip = false;
+    var AppFrame = function(){
+        this.prototype = new Vue();
+        return this;
+    }
+
+    var AppFrame = function(data){
+
+        data.el = '#app';
+        data.methods.msgError = function(msg){
+            return this.$message.error(msg);
+        }
+        data.methods.msgSuccess = function(msg){
+            return this.$message.success(msg);
+        }
+        var vm = new Vue(data);
+
+        return {
+            get : function(){
+                return vm;
+            }
+        }
+    }
+
+    $(document).ready(function(){
+        $('#app').show();
+    });
+</script>
+<style>
+    #app{
+        display: none;
+    }
+</style>
+<div id="app" >
+    <el-row style='height: 93%;overflow: auto;'>
+        <!--工具条-->
+<!--        <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">-->
+<!--            <el-form :inline="true">-->
+
+<!--                <el-form-item>-->
+<!--                    <el-select v-model="department" placeholder="所属部门" style="width: 120px">-->
+
+<!--                    </el-select>-->
+<!--                </el-form-item>-->
+
+<!--                <el-form-item>-->
+<!--                    <el-button type="primary" v-on:click="getAdmin">查询</el-button>-->
+<!--                </el-form-item>-->
+<!--                <el-form-item>-->
+<!--                    <el-button type="" @click="addAdmin" icon="plus">新增</el-button>-->
+<!--                </el-form-item>-->
+<!--            </el-form>-->
+<!--        </el-col>-->
+        <!--列表-->
+        <el-form :label-position="labelPosition" label-width="35%" style='margin-top:100px;'>
+            <el-form-item label="服务器">
+                <el-select v-model="appId" placeholder="请选择服务器" @change="selectGameSerer">
+                    <el-option
+                            v-for="item in appIds"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="区服">
+                <el-select v-model="gameServer" placeholder="请选择区服" @change="serverChange">
+                    <el-option
+                            v-for="item in gameServers"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="充值金额">
+                <el-select v-model="money" placeholder="请选择金额">
+                    <el-option
+                            v-for="item in moneys"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="充值地址">
+                <el-select v-model="redisHostId" disabled placeholder="请选择充值地址">
+                    <el-option
+                            v-for="item in redisHostIds"
+                            :key="item.redisHostId"
+                            :label="item.redisNickName"
+                            :value="item.redisHostId">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="角色名">
+                <el-input
+                        placeholder="请输入角色名"
+                        v-model="role" style="width:200px;">
+                </el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="onSubmit">立即充值</el-button>
+            </el-form-item>
+        </el-form>
+
+    </el-row>
+</div>
+<style>
+    .el-header {
+        background-color: #B3C0D1;
+        color: #333;
+        line-height: 60px;
+    }
+
+    .el-aside {
+        color: #333;
+    }
+</style>
+<script>
+    var frame = AppFrame({
+        el: '#app',
+        data: function() {
+            return {
+                labelPosition:'right',
+                appId:'',
+                appIds: [],
+                gameServer: '',
+                gameServers: [],
+                role: '',
+                moneys: [],
+                money:'',
+                redisHostIds:'',
+                redisHostId:'',
+            }
+        },
+        methods:{
+
+            onSubmit:function(){
+                var self = this;
+                AjaxLoader.post(AppCommon.getUrl('/admin/pay/payPost'),{'appId':self.appId,'gameServer':self.gameServer,'money':self.money,'role':self.role,'redisHostId':self.redisHostId},function(data){
+                    AppDialog.alert(data);
+                });
+            },
+
+            getAllApp:function(){
+                var self = this;
+
+                AjaxLoader.get(AppCommon.getUrl('/admin/app/getAllApp'),function(data){
+                    console.log(data);
+                    self.appIds = data;
+                });
+            },
+
+            serverChange:function(gameServerId){
+                var self = this;
+                redisHostId = '';
+
+                AjaxLoader.post(AppCommon.getUrl('/admin/server/getGameServerInfo'),{'gameServerId':gameServerId},function(data){
+                    self.redisHostId = data.redisHostId;
+                });
+            },
+
+            getAllPayProduct:function(){
+                var self = this;
+
+                AjaxLoader.get(AppCommon.getUrl('/admin/pay/getAllPayProduct'),function(data){
+                    self.moneys = data;
+                });
+            },
+
+            getAllRedisHost:function(){
+                var self = this;
+
+                AjaxLoader.get(AppCommon.getUrl('/admin/redis/getAllRedisHost'),function(data){
+                    self.redisHostIds = data;
+                });
+            },
+
+            selectGameSerer:function(){
+                var self = this;
+                self.gameServer = '';
+
+                AjaxLoader.post(AppCommon.getUrl('/admin/server/getGameServer'),{'appId':self.appId},function(data){
+                    self.gameServers = data;
+                });
+
+            }
+
+        },
+        beforeMount:function() {
+
+        },
+        //用于数据初始化
+        mounted:function(){
+            this.getAllPayProduct();
+            this.getAllApp();
+            this.getAllRedisHost();
+        }
+
+    })
+</script>
+</body>
+</html>

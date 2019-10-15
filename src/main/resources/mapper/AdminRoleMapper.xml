@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jyjx.yxdl.mapper.AdminRoleMapper">
+
+    <select id="findRoleListByAdminId" resultType="com.jyjx.yxdl.entity.AdminRole">
+        SELECT ar.* FROM admin_role AS ar
+        LEFT JOIN role_auth AS ra ON ar.adminRoleId = ra.adminRoleId
+        LEFT JOIN admin AS a ON a.adminId = ra.adminId
+        WHERE ra.adminId = #{adminId}
+    </select>
+
+    <select id="getAdminRoleList" resultType="com.jyjx.yxdl.entity.AdminRole">
+        select * from admin_role LIMIT #{start},#{pageSize}
+    </select>
+
+    <select id="getAdminRoleCount" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM admin_role
+    </select>
+
+    <select id="findAdminRoleById" resultType="com.jyjx.yxdl.entity.AdminRole">
+        SELECT * FROM admin_role WHERE adminRoleId = #{adminRoleId}
+    </select>
+
+    <select id="getRoleIdByAdminId" resultType="java.lang.Integer">
+        SELECT adminRoleId FROM role_auth WHERE adminId = #{adminId}
+    </select>
+</mapper>

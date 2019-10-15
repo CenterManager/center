@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>后台管理</title>
+    <link rel="stylesheet" type="text/css" href="/admin/static/css/admin.css"/>
+    <link rel="stylesheet" type="text/css" href="/admin/static/element/index.css"/>
+    <script src="/admin/static/element/vue.js"></script>
+    <script src="/admin/static/element/index.js"></script>
+    <script src="/admin/static/js/jquery-3.4.1.min.js"></script>
+    <script src="/admin/main.js"></script>
+    <script src="/admin/static/js/common.js"></script>
+
+</head>
+<body>
+<script>
+        Vue.config.devtools = false;
+        Vue.config.productionTip = false;
+        var AppFrame = function(){
+            this.prototype = new Vue();
+            return this;
+        }
+        
+        var AppFrame = function(data){
+
+            data.el = '#app';
+            data.methods.msgError = function(msg){
+                return this.$message.error(msg);
+            }
+            data.methods.msgSuccess = function(msg){
+                return this.$message.success(msg);
+            }
+            var vm = new Vue(data);
+
+            return {
+                get : function(){
+                    return vm;
+                }
+            }
+        }
+
+        $(document).ready(function(){
+            $('#app').show();
+        });
+    </script>
+<style>
+#app{
+    display: none;
+}
+</style>
+<div id="app" >
+<el-row style='height: 93%;overflow: auto;'>
+    <!--工具条-->
+    <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
+        <el-form :inline="true">
+
+            <el-form-item>
+                <el-select v-model="department" placeholder="所属部门" style="width: 120px">
+                    
+                </el-select>
+            </el-form-item>
+            
+            <el-form-item>
+                <el-button type="primary" v-on:click="getAdmin">查询</el-button>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="" @click="addAdmin" icon="plus">新增</el-button>
+            </el-form-item>
+        </el-form>
+    </el-col>
+    <!--列表-->
+    <el-table :data="simulateList" highlight-current-row v-loading="listLoading"  style="width: 100%;" :max-height=tableHeight>
+        <el-table-column type="index" label="序号" width="80">
+        </el-table-column>
+        <el-table-column prop="role" label="角色名" width="300">
+        </el-table-column>
+        <el-table-column prop="serverName" label="区服" width="300">
+        </el-table-column>
+        <el-table-column prop="money" label="充值金额" width="300">
+        </el-table-column>
+        <el-table-column prop="payTime" label="充值时间" width="380">
+        </el-table-column>
+        <el-table-column label="操作" width="140" fixed="right">
+            <template scope="scope">
+                <el-button type="text" size="small" @click="editAdmin(scope.row.adminId)">编辑</el-button>  <el-button type="text" size="small" @click="removeAdmin(scope.row.adminId)">删除</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+        
+</el-row>
+    <!--工具条-->
+    <el-col :span="24" class="toolbar text-right">
+    <el-pagination
+        background
+        @current-change="handleCurrentChange"
+        @size-change="handleSizeChange"
+        :current-page="currentPage"
+        :page-sizes="[10, 20, 50, 100]"
+        :page-size="pageSize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total">
+    </el-pagination>
+    </el-col>
+</div>
+<style>
+    .el-header {
+        background-color: #B3C0D1;
+        color: #333;
+        line-height: 60px;
+    }
+
+    .el-aside {
+        color: #333;
+    }
+</style>
+<script>
+    var frame = AppFrame({
+        el: '#app',
+        data: function() {
+            return {
+                total:0,
+                page:1,
+                pageSize:10,
+                simulateList:[]
+            }
+        },
+        methods:{
+
+            getSimulateList:function(page,pageSize) {
+                var self = this;
+
+                AjaxLoader.post(AppCommon.getUrl('/admin/pay/getSimulateList'),{'page':page,'pageSize':pageSize},function(data){console.log(data);
+                    self.simulateList = data.list;
+                    self.total = data.count
+                });
+
+            },
+
+
+        },
+        beforeMount:function() {
+
+        },
+        //用于数据初始化
+        mounted:function(){
+            this.getSimulateList(this.page,this.pageSize);
+        }
+
+    })
+</script>
+</body>
+</html>

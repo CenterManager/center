@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jyjx.yxdl.mapper.GameServerMapper">
+
+
+    <select id="getGameServer" resultType="com.jyjx.yxdl.entity.GameServer">
+            SELECT *,serverId AS value,serverName AS label FROM game_server WHERE appId = #{appId}
+    </select>
+
+    <select id="findServerById" resultType="com.jyjx.yxdl.entity.GameServer">
+            SELECT * FROM game_server WHERE serverId = #{serverId}
+    </select>
+
+</mapper>

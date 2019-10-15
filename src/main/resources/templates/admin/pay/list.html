@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>后台管理</title>
+    <link rel="stylesheet" type="text/css" href="/admin/static/css/admin.css"/>
+    <link rel="stylesheet" type="text/css" href="/admin/static/element/index.css"/>
+    <script src="/admin/static/element/vue.js"></script>
+    <script src="/admin/static/element/index.js"></script>
+    <script src="/admin/static/js/jquery-3.4.1.min.js"></script>
+    <script src="/admin/main.js"></script>
+    <script src="/admin/static/js/common.js"></script>
+
+</head>
+<body>
+<script>
+        Vue.config.devtools = false;
+        Vue.config.productionTip = false;
+        var AppFrame = function(){
+            this.prototype = new Vue();
+            return this;
+        }
+        
+        var AppFrame = function(data){
+
+            data.el = '#app';
+            data.methods.msgError = function(msg){
+                return this.$message.error(msg);
+            }
+            data.methods.msgSuccess = function(msg){
+                return this.$message.success(msg);
+            }
+            var vm = new Vue(data);
+
+            return {
+                get : function(){
+                    return vm;
+                }
+            }
+        }
+
+        $(document).ready(function(){
+            $('#app').show();
+        });
+    </script>
+<style>
+#app{
+    display: none;
+}
+</style>
+<div id="app" >
+<el-row style='height: 93%;overflow: auto;'>
+    <!--工具条-->
+    <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
+        <el-form :inline="true">
+
+            <el-form-item>
+                <el-select v-model="department" placeholder="所属部门" style="width: 120px">
+                    
+                </el-select>
+            </el-form-item>
+            
+            <el-form-item>
+                <el-button type="primary" v-on:click="getAdmin">查询</el-button>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="" @click="addAdmin" icon="plus">新增</el-button>
+            </el-form-item>
+        </el-form>
+    </el-col>
+    <!--列表-->
+    <el-table :data="payList" highlight-current-row v-loading="listLoading"  style="width: 100%;" :max-height=tableHeight>
+        <el-table-column type="index" label="序号" width="80">
+        </el-table-column>
+        <el-table-column prop="id" label="订单ID" width="260">
+        </el-table-column>
+        <el-table-column prop="app_id" label="APPID" width="100">
+        </el-table-column>
+        <el-table-column prop="channel" label="渠道" width="120">
+        </el-table-column>
+        <el-table-column prop="create_time" label="创建订单时间" width="190">
+        </el-table-column>
+        <el-table-column prop="modify_time" label="回调通知时间" width="190">
+        </el-table-column>
+        <el-table-column prop="price" label="金额" width="150">
+        </el-table-column>
+        <el-table-column prop="states" label="支付状态" width="100">
+        </el-table-column>
+        <el-table-column prop="notify_ip" label="回调IP" width="150">
+        </el-table-column>
+        <el-table-column prop="role_id" label="角色ID" width="310">
+        </el-table-column>
+        <el-table-column prop="server_id" label="区服ID" width="150">
+        </el-table-column>
+        <el-table-column label="操作" width="140" fixed="right">
+            <template scope="scope">
+                <el-button type="text" size="small" @click="editAdmin(scope.row.adminId)">编辑</el-button>  <el-button type="text" size="small" @click="removeAdmin(scope.row.adminId)">删除</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+        
+</el-row>
+    <!--工具条-->
+    <el-col :span="24" class="toolbar text-right">
+    <el-pagination
+        background
+        @current-change="handleCurrentChange"
+        @size-change="handleSizeChange"
+        :current-page="currentPage"
+        :page-sizes="[10, 20, 50, 100]"
+        :page-size="pageSize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total">
+    </el-pagination>
+    </el-col>
+</div>
+<style>
+    .el-header {
+        background-color: #B3C0D1;
+        color: #333;
+        line-height: 60px;
+    }
+
+    .el-aside {
+        color: #333;
+    }
+</style>
+<script>
+    var frame = AppFrame({
+        el: '#app',
+        data: function() {
+            return {
+                total:0,
+                page:1,
+                pageSize:10,
+                payList:[]
+            }
+        },
+        methods:{
+
+            handleCurrentChange:function(val) {
+                // var department = this.department;
+                // this.page = val;
+                // var pageSize = this.pageSize;
+                // var keytype = this.keytype;
+                // var keyword = this.keyword;
+                // this.getAdminList(department,this.page,pageSize,keytype,keyword);
+                this.page = val;
+                var pageSize = this.pageSize;
+                var keytype = this.keytype;
+                var keyword = this.keyword;
+                this.getPayList(this.page,this.pageSize);
+            },
+
+            handleSizeChange:function(val) {
+                // var department = this.department;
+                // this.currentPage = 1;
+                // this.pageSize = val;
+                // var keytype = this.keytype;
+                // var keyword = this.keyword;
+                // this.getAdminList(department,this.currentPage,this.pageSize,keytype,keyword);
+                this.page = 1;
+                this.pageSize = val;
+                this.getPayList(this.page,this.pageSize);
+            },
+
+            getPayList:function(page,pageSize) {
+                var self = this;
+
+                AjaxLoader.post(AppCommon.getUrl('/admin/pay/getPayList'),{'page':page,'pageSize':pageSize},function(data){console.log(data);
+                    self.payList = data;
+                });
+
+            },
+
+            getPayCount:function() {
+                var self = this;
+
+                AjaxLoader.get(AppCommon.getUrl('/admin/pay/getPayCount'),function(data){console.log(data);
+                    self.total = data;
+                });
+
+            },
+
+        },
+        beforeMount:function() {
+
+        },
+        //用于数据初始化
+        mounted:function(){
+            this.getPayList(this.page,this.pageSize);
+            this.getPayCount();
+        }
+
+    })
+</script>
+</body>
+</html>

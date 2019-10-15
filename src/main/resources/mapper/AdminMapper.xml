@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jyjx.yxdl.mapper.AdminMapper">
+
+
+    <select id="findAdminByPrimary" resultType="com.jyjx.yxdl.entity.Admin">
+        select * from admin where adminId = #{adminId}
+    </select>
+
+    <select id="findAdminByAdminAccount" resultType="com.jyjx.yxdl.entity.Admin">
+        select * from admin where adminAccount = #{adminAccount}
+    </select>
+
+</mapper>

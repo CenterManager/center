@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jyjx.yxdl.mapper.AdminMenuMapper">
+
+
+    <select id="getAdminMenuList" resultType="AdminMenu">
+        select * from admin_menu where id = #{adminMenuId};
+    </select>
+
+    <select id="getAdminMenuByPrentId" resultType="AdminMenu">
+        select * from admin_menu where parentId = #{parentId};
+    </select>
+
+    <select id="getAuthMenu" resultType="com.jyjx.yxdl.entity.AdminMenu">
+        SELECT am.* FROM admin_menu AS am
+        LEFT JOIN role_permission AS rp ON rp.adminMenuId = am.adminMenuId
+        LEFT JOIN admin_role_permission AS arp ON arp.rolePermissionId = rp.rolePermissionId
+        <if test="parentId != null">
+            WHERE am.parentId = #{parentId}
+        </if>
+        <if test="parentId == null">
+            WHERE am.parentId = 0
+        </if>
+        <if test="roleIds != null">
+            AND arp.adminRoleId IN
+            <foreach item="item"  index="index"  open="(" separator=","  close=")" collection="roleIds">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+</mapper>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>后台管理</title>
+    <link rel="stylesheet" type="text/css" href="static/css/admin.css"/>
+    <link rel="stylesheet" type="text/css" href="static/element/index.css"/>
+    <script src="static/element/vue.js"></script>
+    <script src="static/element/index.js"></script>
+    <script src="static/js/jquery-3.4.1.min.js"></script>
+    <script src="main.js"></script>
+    <script src="static/js/common.js"></script>
+
+</head>
+<body>
+<script>
+    Vue.config.devtools = false;
+    Vue.config.productionTip = false;
+    var AppFrame = function(){
+        this.prototype = new Vue();
+        return this;
+    }
+
+    var AppFrame = function(data){
+
+        data.el = '#app';
+        data.methods.msgError = function(msg){
+            return this.$message.error(msg);
+        }
+        data.methods.msgSuccess = function(msg){
+            return this.$message.success(msg);
+        }
+        var vm = new Vue(data);
+
+        return {
+            get : function(){
+                return vm;
+            }
+        }
+    }
+
+    $(document).ready(function(){
+        $('#app').show();
+    });
+</script>
+<style>
+    #app{
+        display: none;
+    }
+</style>
+<div id="app">
+    <el-container>
+        <el-header class='admin-index-header' style="text-align: right; font-size: 12px">
+            <el-dropdown>
+                <i class="el-icon-setting" style="margin-right: 15px"></i>
+                <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item>查看</el-dropdown-item>
+                    <el-dropdown-item>新增</el-dropdown-item>
+                    <el-dropdown-item>删除</el-dropdown-item>
+                </el-dropdown-menu>
+            </el-dropdown>
+        </el-header>
+
+
+        <el-container class="admin-index-content">
+            <el-aside class="menu-expanded">
+                <el-menu class="admin-index-menu">
+                    <template v-for="(item,index) in tabList">
+                        <el-submenu v-bind:index='index'>
+                            <template slot="title"><i class="el-icon-star-on"></i>{{item.adminMenuName}}</template>
+                            <template v-for="childMenu in item.childMenu">
+                                <template v-if="childMenu.type == 1">
+                                    <el-submenu index="1-4">
+                                        <template slot="title">选项4</template>
+                                        <el-menu-item index="1-4-1">选项4-1</el-menu-item>
+                                    </el-submenu>
+                                </template>
+                                <template v-else>
+                                    <el-menu-item v-bind:index="childMenu.adminMenuId" @click="addTab(childMenu.adminMenuName,childMenu.action)">{{childMenu.adminMenuName}}</el-menu-item>
+                                </template>
+                            </template>
+                        </el-submenu>
+                    </template>
+                </el-menu>
+            </el-aside>
+            <el-main class='admin-index-main'>
+                <el-tabs v-model="Tab" type="card" closable @tab-remove="removeTab">
+                    <el-tab-pane
+                            v-for="(item, index) in Tabs"
+                            :key="item.name"
+                            :label="item.title"
+                            :name="item.name"
+                            aria-selected="true"
+                    >
+                        <div v-html="item.content"></div>
+                    </el-tab-pane>
+                </el-tabs>
+            </el-main>
+        </el-container>
+    </el-container>
+</div>
+<style>
+    .el-header {
+        background-color: #B3C0D1;
+        color: #333;
+        line-height: 60px;
+    }
+
+    .el-aside {
+        color: #333;
+    }
+</style>
+<script>
+    var frame = AppFrame({
+        el: '#app',
+        data: function() {
+            tabList:[];
+            windowHeight:'';
+            return {
+                Tab: 'index',
+                Tabs: [{
+                    title: '首页',
+                    name: 'index',
+                    content: (function(){
+                        var iframeHeight = $('#app').height()-130;
+                        return '<iframe id="gridIframe"  frameborder="0"  src="http://yxdl.jiayijituan.cn:8555/admin/indexP" style="width:99%;height:'+iframeHeight+'px;"></iframe>';
+                    })()
+                }],
+                tabIndex: 2
+            }
+        },
+        methods:{
+            addTab:function(TabName,url) {
+                this.checkTab(TabName).then(() => {
+                    this.creatTab(TabName,url)
+                })
+            },
+            creatTab(TabName,url)
+            {
+                var iframeHeight = $('.menu-expanded').height()-70;
+                var content = '<iframe id="gridIframe" scrolling="yes" frameborder="0"  src='+url+' style="width:100%; min-width:1100px;height:'+iframeHeight+'px;min-height: 400px"></iframe>';
+                // let newTabName = ++this.tabIndex + '';
+                this.Tabs.push({
+                    title: TabName,
+                    name: TabName,
+                    content:content
+                });
+                this.Tab = TabName;
+            },
+            checkTab:function(TabName){
+                return new Promise((resolve, reject) => {
+                    let tabs = this.Tabs;
+                let isCheck = true;
+                let chekcTab;
+                tabs.forEach((tab, index) => {
+                    if (tab.name === TabName) {
+                    isCheck = false;
+                    checkTab = TabName;
+                }
+            });
+                if (isCheck) {
+                    resolve();
+                }else{
+                    this.Tab = TabName;
+                }
+            })
+            },
+            removeTab(targetName)
+            {
+                if (targetName == 'index') {
+                    this.$message('首页不能关闭~');
+                    return false;
+                }
+                let tabs = this.Tabs;
+                let activeName = this.Tab;
+                if (activeName === targetName) {
+                    tabs.forEach(function(tab, index){
+                        if(tab.name === targetName){
+                            let nextTab = tabs[index + 1] || tabs[index - 1];
+
+                            if (nextTab) {
+                                activeName = nextTab.name;
+                            }
+                        }
+                    });
+
+                }
+
+                this.Tab = activeName;
+                this.Tabs = tabs.filter(tab => tab.name !== targetName);
+            },
+            getTabList(){
+                var self = this;
+                AjaxLoader.get(AppCommon.getUrl('/adminMenu/getAdminMenuList'),function(data){
+                    self.tabList = data;
+                });
+            },
+            initStyle(){
+                this.windowHeight = $(window).height();
+                this.contentHeight = $(window).height()-60;
+                $('.admin-index-content').height(this.contentHeight);
+                $('.el-container').height(this.windowHeight);
+            }
+        },
+        beforeMount:function() {
+            this.getTabList();
+            this.initStyle();
+        },
+        //用于数据初始化
+        mounted:function(){
+            this.getTabList();
+            this.initStyle();
+        }
+
+    })
+</script>
+</body>
+</html>

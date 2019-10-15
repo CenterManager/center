@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jyjx.yxdl.mapper.PayMapper">
+
+
+    <select id="getPayList" resultType="com.jyjx.yxdl.entity.Pay">
+          SELECT
+          *,CONCAT(ROUND((money/100)),'元') AS price,
+          (CASE state WHEN 0 THEN '待支付' WHEN 1 THEN  '待支付' WHEN 2 THEN  '已支付' END ) AS states
+           FROM order_info
+           ORDER BY modify_time DESC
+           LIMIT #{start} , #{pageSize}
+    </select>
+
+    <select id="getPayCount" resultType="java.lang.Integer">
+          SELECT COUNT(*) FROM order_info
+    </select>
+
+    <select id="getPayGroup" resultType="java.util.HashMap">
+          SELECT
+          CONVERT(modify_time,date) as notify,
+          CONCAT(ROUND((SUM(money)/100)),"元") as sumMoney
+          FROM order_info
+          WHERE state = 2
+          <if test="appId != null">
+               AND app_id = #{appId}
+          </if>
+          <if test="femaleBag != null">
+               AND female_bag = #{femaleBag}
+          </if>
+          <if test="begin != null">
+                AND notify_time BETWEEN ${begin} AND ${end}
+          </if>
+          GROUP BY notify
+          ORDER BY notify DESC
+          LIMIT #{start} , #{pageSize}
+    </select>
+
+    <select id="getGroupCount" resultType="java.lang.Integer">
+          select count(1) from (
+                SELECT CONVERT(modify_time,date) as notify,
+                SUM(money) as sumMoney
+                FROM order_info
+                WHERE state = 2
+                <if test="appId != null">
+                    AND app_id = #{appId}
+                </if>
+                <if test="femaleBag != null">
+                    AND female_bag = #{femaleBag}
+                </if>
+                <if test="begin != null">
+                    AND notify_time BETWEEN ${begin} AND ${end}
+                </if>
+                GROUP BY notify
+          ) as selectTable
+    </select>
+
+    <select id="getAllPayMoney" resultType="java.lang.Integer">
+          SELECT
+          ROUND(sum(money)/100)
+          FROM order_info
+          WHERE state = 2
+    </select>
+
+</mapper>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jyjx.yxdl.mapper.RolePermissionMapper">
+
+    <select id="getRolePermission" resultType="com.jyjx.yxdl.entity.RolePermission">
+          SELECT *  FROM role_permission
+          <if test="parentId != null">
+            WHERE
+            parentId = #{parentId}
+          </if>
+          <if test="parentId == null">
+            WHERE
+            parentId = 0
+          </if>
+    </select>
+
+    <select id="selectPermissionByAdminId" resultType="com.jyjx.yxdl.entity.RolePermission">
+        SELECT *  FROM role_permission AS rp LEFT JOIN
+    </select>
+
+    <select id="getAllPermission" resultType="com.jyjx.yxdl.entity.RolePermission">
+        SELECT *  FROM role_permission
+    </select>
+
+    <select id="getAllPermissionByRoleId" resultType="com.jyjx.yxdl.entity.RolePermission">
+        <if test="roleIds != null">
+        SELECT rp.*  FROM role_permission AS rp
+        LEFT JOIN admin_role_permission AS arp ON rp.rolePermissionId = arp.rolePermissionId
+        LEFT JOIN admin_role AS ar ON ar.adminRoleId = arp.adminRoLeId
+        WHERE ar.adminRoleId IN
+        <foreach item="item"  index="index"  open="(" separator=","  close=")" collection="roleIds">
+        #{item}
+        </foreach>
+        </if>
+        <if test="roleIds == null">
+            SELECT *  FROM role_permission
+        </if>
+    </select>
+
+    <select id="getPermissionByRoleId" resultType="com.jyjx.yxdl.entity.AdminMenu">
+        SELECT am.* FROM admin_menu AS am
+        LEFT JOIN role_permission AS rp ON rp.adminMenuId = am.adminMenuId
+        LEFT JOIN admin_role_permission AS arp ON arp.rolePermissionId = rp.rolePermissionId
+        WHERE am.parentId = 0
+        <if test="roleIds != null">
+        AND arp.adminRoleId IN
+        <foreach item="item"  index="index"  open="(" separator=","  close=")" collection="roleIds">
+            #{item}
+        </foreach>
+        </if>
+    </select>
+
+</mapper>
